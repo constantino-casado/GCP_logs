@@ -9,11 +9,11 @@ This repository contains a local desktop app for downloading, filtering, and ano
 - Discovers the active GCP projects visible to the authenticated identity.
 - Lets the user select one or more projects from a multi-selection project list.
 - Downloads BigQuery `jobservice.jobcompleted` log entries from the selected GCP projects.
-- Uses the same Cloud Logging API filter as the Fabric notebook: last 30 days, BigQuery resources, `INFO` severity, and completed BigQuery jobs.
+- Uses the following Cloud Logging API filter: last 30 days, BigQuery resources, `INFO` severity, and completed BigQuery jobs.
 - Flattens the same BigQuery audit-log fields used by the notebook, including user, method, query, job statistics, and referenced tables.
 - Anonymizes `principalEmail` with the same SHA-256 hex digest behavior as Spark `sha2(value, 256)`.
-- Optionally hashes SQL query string literals and email-like values before export so repeated values can still be identified without exposing the raw values.
-- Streams results to local `.csv` or `.jsonl` files without requiring Spark, Fabric, Delta Lake, or a Lakehouse.
+- Optionally hashes SQL query string literals and email-like values before export to avoid exposing the raw values.
+- Streams results to local `.csv` or `.jsonl` files without requiring cloud resources.
 
 ## Install
 
@@ -21,6 +21,7 @@ This repository contains a local desktop app for downloading, filtering, and ano
 
 - Python 3.10 or later.
 - Google Cloud CLI (`gcloud`). The app uses it to launch the Application Default Credentials browser sign-in flow automatically.
+- If using a service account, the file with the secrets for authentication. That account must have the permissions described in the permissions section. 
 
 On Windows, install Google Cloud CLI with:
 
@@ -76,7 +77,7 @@ For service account authentication, select a service account JSON key with permi
 3. Click **Execute log capture...**.
 4. Choose where the exported `.csv` or `.jsonl` file should be stored.
 
-The log query is intentionally not configurable in the GUI so it stays aligned with the source notebook:
+The log query is intentionally not configurable in the GUI to capture bigquery jobs executions information:
 
 ```text
 timestamp >= "<30 days ago>" AND resource.type="bigquery_resource" AND severity=INFO AND protoPayload.methodName="jobservice.jobcompleted"
