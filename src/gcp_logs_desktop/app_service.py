@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from collections.abc import Callable, Iterator
+from pathlib import Path
 from typing import Any
 
 from .auth import load_credentials
 from .config import CaptureConfig
-from .exporter import export_rows
+from .exporter import export_rows, timestamped_output_path
 from .gcp_logging import iter_bigquery_log_entries
 from .processor import flatten_bigquery_log_entry
 
@@ -13,22 +15,29 @@ StatusCallback = Callable[[str], None]
 ProgressCallback = Callable[[int], None]
 
 
+@dataclass(frozen=True)
+class CaptureResult:
+    row_count: int
+    output_path: Path
+
+
 def capture_logs(
     config: CaptureConfig,
     status_callback: StatusCallback | None = None,
     progress_callback: ProgressCallback | None = None,
     credentials: Any | None = None,
-) -> int:
+) -> CaptureResult:
     config.validate()
     if credentials is None:
         _status(status_callback, "Authenticating with Google Cloud...")
         credentials = load_credentials(config.auth_mode, config.service_account_file)
 
     _status(status_callback, "Downloading and processing BigQuery logs...")
+    final_output_path = timestamped_output_path(config.output_path, config.output_format)
     rows = _iter_processed_rows(config, credentials, progress_callback)
-    count = export_rows(rows, config.output_path, config.output_format, progress_callback)
-    _status(status_callback, f"Exported {count} rows to {config.output_path}")
-    return count
+    count = export_rows(rows, final_output_path, config.output_format, progress_callback)
+    _status(status_callback, f"Exported {count} rows to {final_output_path}")
+    return CaptureResult(row_count=count, output_path=final_output_path)
 
 
 def _iter_processed_rows(

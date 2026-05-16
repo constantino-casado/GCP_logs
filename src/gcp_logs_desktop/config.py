@@ -24,6 +24,6 @@ class CaptureConfig:
                 raise ValueError(f"Service account file does not exist: {self.service_account_file}")
         if not self.projects:
             raise ValueError("At least one GCP project is required.")
-        if self.output_format not in {"csv", "jsonl"}:
-            raise ValueError("Output format must be 'csv' or 'jsonl'.")
+        if self.output_format not in {"csv", "parquet"}:
+            raise ValueError("Output format must be 'csv' or 'parquet'.")
         self.output_path.parent.mkdir(parents=True, exist_ok=True)

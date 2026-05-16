@@ -133,7 +133,7 @@ class BigQueryLogsApp:
         ttk.Combobox(
             self.main,
             textvariable=self.output_format,
-            values=("csv", "jsonl"),
+            values=("csv", "parquet"),
             width=10,
             state="readonly",
         ).grid(row=7, column=1, sticky="w", pady=(12, 4))
@@ -278,7 +278,7 @@ class BigQueryLogsApp:
 
     def _run_capture(self, config: CaptureConfig) -> None:
         try:
-            count = capture_logs(
+            result = capture_logs(
                 config,
                 status_callback=lambda message: self.messages.put(("status", message)),
                 progress_callback=lambda count: self.messages.put(("progress", count)),
@@ -287,7 +287,7 @@ class BigQueryLogsApp:
         except Exception as exc:
             self.messages.put(("capture_error", exc))
         else:
-            self.messages.put(("capture_done", (count, config.output_path)))
+            self.messages.put(("capture_done", (result.row_count, result.output_path)))
 
     def _poll_messages(self) -> None:
         while True:

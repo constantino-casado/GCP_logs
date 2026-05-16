@@ -1,6 +1,12 @@
 import hashlib
+import tempfile
+from datetime import datetime
+from pathlib import Path
 import unittest
 
+import pyarrow.parquet as pq
+
+from gcp_logs_desktop.exporter import export_rows, timestamped_output_path
 from gcp_logs_desktop.filters import build_bigquery_log_filter, normalize_project_names
 from gcp_logs_desktop.processor import flatten_bigquery_log_entry, hash_query_literals, spark_sha2_256
 
@@ -16,6 +22,32 @@ class ProcessorTests(unittest.TestCase):
             normalize_project_names(["my-project", "projects/another-project", " "]),
             ["projects/my-project", "projects/another-project"],
         )
+
+    def test_output_path_gets_extraction_timestamp(self) -> None:
+        output_path = timestamped_output_path(
+            Path("bq_logs.csv"),
+            "csv",
+            datetime(2026, 5, 16, 13, 10, 45),
+        )
+
+        self.assertEqual(output_path, Path("bq_logs_20260516_131045.csv"))
+
+    def test_parquet_export_writes_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output_path = Path(directory) / "logs.parquet"
+            count = export_rows(
+                [
+                    {"timestamp": "2026-05-16T10:00:00Z", "insertId": "a"},
+                    {"timestamp": "2026-05-16T10:01:00Z", "insertId": "b"},
+                ],
+                output_path,
+                "parquet",
+            )
+
+            table = pq.read_table(output_path)
+            self.assertEqual(count, 2)
+            self.assertEqual(table.num_rows, 2)
+            self.assertEqual(table.column("insertId").to_pylist(), ["a", "b"])
 
     def test_filter_matches_notebook_query(self) -> None:
         log_filter = build_bigquery_log_filter()

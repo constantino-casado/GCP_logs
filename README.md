@@ -2,6 +2,7 @@
 
 This repository contains a local desktop app for downloading, filtering, and anonymizing Google Cloud BigQuery audit logs from a user's computer.
 
+The implementation is based on the Fabric notebook **Full process**. The notebook used Spark to transform and export the data; this desktop version keeps the same overall flow but replaces Spark with standard local Python processing and CSV/Parquet exports.
 
 ## What the app does
 
@@ -12,8 +13,8 @@ This repository contains a local desktop app for downloading, filtering, and ano
 - Uses the following Cloud Logging API filter: last 30 days, BigQuery resources, `INFO` severity, and completed BigQuery jobs.
 - Flattens the same BigQuery audit-log fields used by the notebook, including user, method, query, job statistics, and referenced tables.
 - Anonymizes `principalEmail` with the same SHA-256 hex digest behavior as Spark `sha2(value, 256)`.
-- Optionally hashes SQL query string literals and email-like values before export to avoid exposing the raw values.
-- Streams results to local `.csv` or `.jsonl` files without requiring cloud resources.
+- Optionally hashes SQL query string literals and email-like values before export so repeated values can still be identified without exposing the raw values.
+- Exports results to local `.csv` or `.parquet` files without requiring Spark, Fabric, Delta Lake, or a Lakehouse.
 
 ## Install
 
@@ -75,7 +76,7 @@ For service account authentication, select a service account JSON key with permi
 1. Start the app and authenticate with GCP.
 2. After authentication, select one or more projects from the discovered project list.
 3. Click **Execute log capture...**.
-4. Choose where the exported `.csv` or `.jsonl` file should be stored.
+4. Choose where the exported `.csv` or `.parquet` file should be stored.
 
 The log query is intentionally not configurable in the GUI to capture bigquery jobs executions information:
 
@@ -86,5 +87,7 @@ timestamp >= "<30 days ago>" AND resource.type="bigquery_resource" AND severity=
 ## Output
 
 The exported file includes flattened fields such as `timestamp`, `insertId`, `principalEmail`, `methodName`, `statementType`, `query`, `jobStatistics`, and `referencedTables`.
+
+The app automatically appends the extraction date and time to the selected output filename, for example `bq_logs_20260516_131045.csv` or `bq_logs_20260516_131045.parquet`.
 
 By default, email anonymization and query literal hashing are enabled.
