@@ -2,8 +2,6 @@
 
 This repository contains a local desktop app for downloading, filtering, and anonymizing Google Cloud BigQuery audit logs from a user's computer.
 
-The implementation is based on the Fabric notebook **Full process**. The notebook used Spark to transform and export the data; this desktop version keeps the same overall flow but replaces Spark with standard local Python processing and CSV/Parquet exports.
-
 ## What the app does
 
 - Authenticates with GCP using gcloud Application Default Credentials or a service account JSON file.
@@ -11,10 +9,10 @@ The implementation is based on the Fabric notebook **Full process**. The noteboo
 - Lets the user select one or more projects from a multi-selection project list.
 - Downloads BigQuery `jobservice.jobcompleted` log entries from the selected GCP projects.
 - Uses the following Cloud Logging API filter: last 30 days, BigQuery resources, `INFO` severity, and completed BigQuery jobs.
-- Flattens the same BigQuery audit-log fields used by the notebook, including user, method, query, job statistics, and referenced tables.
-- Anonymizes `principalEmail` with the same SHA-256 hex digest behavior as Spark `sha2(value, 256)`.
+- Flattens BigQuery audit-log fields including user, method, query, job statistics, and referenced tables.
+- Anonymizes `principalEmail` with a deterministic SHA-256 hex digest.
 - Optionally hashes SQL query string literals and email-like values before export so repeated values can still be identified without exposing the raw values.
-- Exports results to local `.csv` or `.parquet` files without requiring Spark, Fabric, Delta Lake, or a Lakehouse.
+- Exports results to local `.csv` or `.parquet` files.
 
 ## Install
 
