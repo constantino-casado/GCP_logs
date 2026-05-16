@@ -2,7 +2,6 @@
 
 This repository contains a local desktop app for downloading, filtering, and anonymizing Google Cloud BigQuery audit logs from a user's computer.
 
-The implementation is based on the Fabric notebook **Full process**. The notebook used Spark to transform and export the data; this desktop version keeps the same overall flow but replaces Spark with standard local Python processing and streaming CSV/JSONL exports.
 
 ## What the app does
 
