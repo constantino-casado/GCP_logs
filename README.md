@@ -89,3 +89,7 @@ The exported file includes flattened fields such as `timestamp`, `insertId`, `pr
 The app automatically appends the extraction date and time to the selected output filename, for example `bq_logs_20260516_131045.csv` or `bq_logs_20260516_131045.parquet`.
 
 By default, email anonymization and query literal hashing are enabled.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
